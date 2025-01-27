@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lifetrack - Your Fitness Companion</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background: linear-gradient(120deg, #a1c4fd 0%, #c2e9fb 100%);
+            min-height: 100vh;
+        }
+        .page {
+            display: none;
+        }
+        .page.active {
+            display: block;
+        }
+        .button-glow:hover {
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
+            transform: translateY(-1px);
+            transition: all 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Welcome Page -->
+<div id="welcomePage" class="page active min-h-screen flex flex-col items-center justify-center p-4">
+    <p class="absolute top-4 left-4 text-gray-700">Anurag University</p>
+    <h1 class="text-4xl md:text-6xl font-bold text-gray-800 mb-8">Lifetrack</h1>
+    <button onclick="showPage('signupPage')" class="button-glow bg-blue-500 text-white px-8 py-3 rounded-full text-lg font-semibold hover:bg-blue-600 transition duration-300">
+        Get Started
+    </button>
+</div>
+
+<!-- Signup Page -->
+<div id="signupPage" class="page min-h-screen flex items-center justify-center p-4">
+    <div class="bg-white p-8 rounded-lg shadow-lg max-w-md w-full">
+        <h2 class="text-2xl font-bold mb-6 text-gray-800 text-center">Sign Up</h2>
+        <form id="signupForm" class="space-y-4">
+            <input type="text" id="fullName" placeholder="Full Name" class="w-full p-3 border rounded" required>
+            <input type="email" id="signupEmail" placeholder="Email" class="w-full p-3 border rounded" required>
+            <input type="password" id="signupPassword" placeholder="Password" class="w-full p-3 border rounded" required>
+            <input type="password" id="confirmPassword" placeholder="Confirm Password" class="w-full p-3 border rounded" required>
+            <div class="flex items-center">
+                <input type="checkbox" id="terms" class="mr-2" required>
+                <label for="terms" class="text-sm text-gray-600">I agree to the Terms & Conditions</label>
+            </div>
+            <button type="submit" class="w-full bg-blue-500 text-white p-3 rounded font-semibold hover:bg-blue-600 transition duration-300">
+                Sign Up
+            </button>
+            <p class="text-center text-sm text-gray-600">
+                Already have an account? 
+                <a href="#" onclick="showPage('signinPage')" class="text-blue-500 hover:underline">Sign In</a>
+            </p>
+        </form>
+    </div>
+</div>
+
+<!-- Sign In Page -->
+<div id="signinPage" class="page min-h-screen flex items-center justify-center p-4">
+    <div class="bg-white p-8 rounded-lg shadow-lg max-w-md w-full">
+        <h2 class="text-2xl font-bold mb-6 text-gray-800 text-center">Sign In</h2>
+        <form id="signinForm" class="space-y-4">
+            <input type="email" id="signinEmail" placeholder="Email" class="w-full p-3 border rounded" required>
+            <input type="password" id="signinPassword" placeholder="Password" class="w-full p-3 border rounded" required>
+            <button type="submit" class="w-full bg-blue-500 text-white p-3 rounded font-semibold hover:bg-blue-600 transition duration-300">
+                Sign In
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- Dashboard -->
+<div id="dashboard" class="page p-4 md:p-8">
+    <div class="max-w-6xl mx-auto">
+        <div class="flex justify-between items-center mb-8">
+            <h2 id="greeting" class="text-2xl font-bold text-gray-800">Hello, User!</h2>
+            <button onclick="logout()" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">Logout</button>
+        </div>
+
+        <!-- BMI Calculator Section -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+            <h3 class="text-xl font-semibold mb-4">BMI Calculator</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <input type="number" id="height" placeholder="Height (cm)" class="w-full p-3 border rounded mb-3">
+                    <input type="number" id="weight" placeholder="Weight (kg)" class="w-full p-3 border rounded mb-3">
+                    <button onclick="calculateBMI()" class="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600">
+                        Calculate BMI
+                    </button>
+                </div>
+                <div>
+                    <div id="bmiResult" class="text-lg mb-4"></div>
+                    <canvas id="bmiChart" class="w-full"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Workout Plan Section -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+            <h3 class="text-xl font-semibold mb-4">Your Workout Plan</h3>
+            <div id="workoutPlan" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Workout plan will be populated here -->
+            </div>
+        </div>
+
+        <!-- Weekly Schedule -->
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <h3 class="text-xl font-semibold mb-4">Weekly Schedule</h3>
+            <div class="grid grid-cols-1 md:grid-cols-7 gap-2" id="weeklySchedule">
+                <!-- Schedule will be populated here -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Page Navigation
+function showPage(pageId) {
+    document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
+    document.getElementById(pageId).classList.add('active');
+}
+
+// User Management
+const users = [];
+let currentUser = null;
+
+document.getElementById('signupForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const name = document.getElementById('fullName').value;
+    const email = document.getElementById('signupEmail').value;
+    const password = document.getElementById('signupPassword').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
+
+    if (password !== confirmPassword) {
+        alert('Passwords do not match!');
+        return;
+    }
+
+    users.push({ name, email, password });
+    showPage('signinPage');
+});
+
+document.getElementById('signinForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const email = document.getElementById('signinEmail').value;
+    const password = document.getElementById('signinPassword').value;
+
+    const user = users.find(u => u.email === email && u.password === password);
+    if (user) {
+        currentUser = user;
+        document.getElementById('greeting').textContent = `Hello, ${user.name}!`;
+        showPage('dashboard');
+    } else {
+        alert('Invalid credentials!');
+    }
+});
+
+function logout() {
+    currentUser = null;
+    showPage('welcomePage');
+}
+
+// BMI Calculation
+let bmiHistory = [];
+let bmiChart;
+
+function calculateBMI() {
+    const height = document.getElementById('height').value / 100; // Convert to meters
+    const weight = document.getElementById('weight').value;
+    
+    if (!height || !weight) {
+        alert('Please enter both height and weight');
+        return;
+    }
+
+    const bmi = (weight / (height * height)).toFixed(1);
+    const result = document.getElementById('bmiResult');
+    let category, color;
+
+    if (bmi < 18.5) {
+        category = 'Underweight';
+        color = 'text-yellow-500';
+    } else if (bmi < 25) {
+        category = 'Normal weight';
+        color = 'text-green-500';
+    } else if (bmi < 30) {
+        category = 'Overweight';
+        color = 'text-orange-500';
+    } else {
+        category = 'Obese';
+        color = 'text-red-500';
+    }
+
+    result.innerHTML = `Your BMI: <span class="${color} font-bold">${bmi}</span> (${category})`;
+    
+    // Update BMI history and chart
+    bmiHistory.push({date: new Date(), bmi: parseFloat(bmi)});
+    updateBMIChart();
+    updateWorkoutPlan(category);
+}
+
+function updateBMIChart() {
+    const ctx = document.getElementById('bmiChart').getContext('2d');
+    
+    if (bmiChart) {
+        bmiChart.destroy();
+    }
+
+    const labels = bmiHistory.map(entry => entry.date.toLocaleDateString());
+    const data = bmiHistory.map(entry => entry.bmi);
+
+    bmiChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'BMI Progress',
+                data: data,
+                borderColor: 'rgb(59, 130, 246)',
+                tension: 0.1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: false
+                }
+            }
+        }
+    });
+}
+
+function updateWorkoutPlan(bmiCategory) {
+    const workoutPlan = document.getElementById('workoutPlan');
+    let plans = {
+        'Underweight': {
+            'Strength Training': ['Push-ups (3x10)', 'Squats (3x15)', 'Dumbbell curls (3x12)'],
+            'Light Cardio': ['Walking (20 min)', 'Swimming (15 min)', 'Cycling (15 min)']
+        },
+        'Normal weight': {
+            'Mixed Training': ['Running (20 min)', 'Push-ups (3x12)', 'Planks (3x30s)'],
+            'Cardio': ['HIIT (15 min)', 'Jump rope (10 min)', 'Burpees (3x10)']
+        },
+        'Overweight': {
+            'Cardio Focus': ['Walking (30 min)', 'Swimming (20 min)', 'Cycling (25 min)'],
+            'Body Weight': ['Squats (3x12)', 'Modified push-ups (3x8)', 'Leg raises (3x12)']
+        },
+        'Obese': {
+            'Light Exercise': ['Walking (15 min)', 'Water aerobics (20 min)', 'Stretching (10 min)'],
+            'Strength': ['Wall push-ups (3x8)', 'Chair squats (3x10)', 'Knee raises (3x12)']
+        }
+    };
+
+    workoutPlan.innerHTML = '';
+    const plan = plans[bmiCategory];
+    
+    for (let category in plan) {
+        const div = document.createElement('div');
+        div.className = 'bg-gray-50 p-4 rounded';
+        div.innerHTML = `
+            <h4 class="font-semibold text-lg mb-2">${category}</h4>
+            <ul class="list-disc list-inside">
+                ${plan[category].map(exercise => `<li>${exercise}</li>`).join('')}
+            </ul>
+        `;
+        workoutPlan.appendChild(div);
+    }
+}
+
+// Initialize Weekly Schedule
+function initializeSchedule() {
+    const weekDays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const schedule = document.getElementById('weeklySchedule');
+    
+    weekDays.forEach(day => {
+        const dayDiv = document.createElement('div');
+        dayDiv.className = 'bg-gray-50 p-4 rounded';
+        dayDiv.innerHTML = `
+            <h4 class="font-semibold mb-2">${day}</h4>
+            <div class="space-y-2">
+                <label class="flex items-center">
+                    <input type="checkbox" class="mr-2"> Workout Complete
+                </label>
+            </div>
+        `;
+        schedule.appendChild(dayDiv);
+    });
+}
+
+// Initialize the app
+initializeSchedule();
+</script>
+<script>document.body.addEventListener('wheel', e => { if (!e.ctrlKey) return; e.preventDefault(); return }, { passive: false })</script>
+	</body>
+</html>
